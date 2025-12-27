@@ -17,9 +17,6 @@ WindowsのWSL2(Ubuntu)でComfyUIをセットアップするためのWindows Batc
   その他ドライブにインストールしたい場合は、手動で`2.Install_Linux.bat`内の
   `$DistroPath`を変更してインストールしてください。
 
-> 残念ながら本人がAMD GPUを所有していないため、動作確認ができていません。  
-> もしAMD GPUを所有している方がいらっしゃいましたら、動作確認をしていただけると助かります。
-
 ## インストール方法
 
 1. WSL2を有効にする  
@@ -58,3 +55,7 @@ WindowsのWSL2(Ubuntu)でComfyUIをセットアップするためのWindows Batc
 
 # LICENSE
 This project is licensed under the MIT License.
+
+# Special Thanks
+- まめ大福の使い魔 様  
+    AMD ROCm対応版ComfyUIの検証環境ありがとうございました！
