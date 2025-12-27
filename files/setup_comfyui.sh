@@ -2,23 +2,32 @@
 
 export WORKSPACE="${WORKSPACE_PATH:-/workspace}"
 
-# Python3.13(UV)仮想環境をセットアップ
+# Python3.12(UV)仮想環境をセットアップ
 curl -LsSf https://astral.sh/uv/install.sh | sh
 . ${HOME}/.profile
 
 rm -rf ${VENV_PATH} > /dev/null 2>&1
-uv venv -p 3.13 ${VENV_PATH}
+uv venv -p 3.12 ${VENV_PATH}
 . ${VENV_PATH}/bin/activate
 
 # PyTorch(ROCm版)をインストール
-uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.4
+#uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.4
+
+# PyTorch(ROCm版)をインストール (2025/12/27: AMD公式の ROCm 6.4.4 + PyTorch 2.8.0 + Python 3.12 を直接ダウンロードしてインストール)
+cd ~
+wget https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.4/pytorch_triton_rocm-3.4.0%2Brocm6.4.4.gitf9e5bf54-cp312-cp312-linux_x86_64.whl
+wget https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.4/torch-2.8.0%2Brocm6.4.4.gitc1404424-cp312-cp312-linux_x86_64.whl
+wget https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.4/torchvision-0.23.0%2Brocm6.4.4.git824e8c87-cp312-cp312-linux_x86_64.whl
+wget https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.4/torchaudio-2.8.0%2Brocm6.4.4.git6e1c7fe9-cp312-cp312-linux_x86_64.whl
+uv pip install *.whl
+rm -f *.whl
 
 # Workaround(2025/12/27): libhsa-runtime64.so 関連のエラーを回避
+python3 -c "import torch; print('Workaround Before:', 'torch.cuda.is_available() = ', torch.cuda.is_available())"
 TORCH_LOCATION=$(uv pip show torch | grep Location | awk -F ": " '{print $2}')
 cd ${TORCH_LOCATION}/torch/lib/
 rm -f libhsa-runtime64.so*
-python3 -c 'import torch' 2> /dev/null && echo '[SUCCESS] Torch import succeeded' || echo '[CRITICAL] Torch import failed!!!'
-cd -
+python3 -c "import torch; print('Workaround After:', 'torch.cuda.is_available() = ', torch.cuda.is_available())"
 
 # ComfyUI をクローン,　依存関係をインストール
 rm -rf ${COMFYUI_PATH} > /dev/null 2>&1
@@ -35,10 +44,11 @@ cd comfyui-manager
 uv pip install -r requirements.txt
 
 # Crystools ノードをインストール
-cd ${COMFYUI_PATH}/custom_nodes
-git clone https://github.com/crystian/comfyui-crystools.git comfyui-crystools
-cd comfyui-crystools
-uv pip install -r requirements.txt
+# AMD ROCm 環境では動作しないためコメントアウト
+#cd ${COMFYUI_PATH}/custom_nodes
+#git clone https://github.com/crystian/comfyui-crystools.git comfyui-crystools
+#cd comfyui-crystools
+#uv pip install -r requirements.txt
 
 cat << _EOL_ > ${WORKSPACE_PATH}/comfyui/extra_model_paths.yaml
 comfyui:
@@ -82,7 +92,7 @@ python -c "import torch; print('torch=', torch.__version__); print('avail=', tor
 echo "==================================="
 
 cd ${COMFYUI_PATH}
-export CLI_ARGS="--use-pytorch-cross-attention --dont-print-server --force-fp16 "
+export CLI_ARGS="--dont-print-server --force-fp16 "
 python3 -u main.py --listen --port 8188 ${CLI_ARGS}
 _EOL_
 

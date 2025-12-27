@@ -86,7 +86,7 @@ $bashScript = @'
 
 apt-get update
 apt-get full-upgrade -y --no-install-recommends
-apt-get install -y --no-install-recommends curl git aria2 ca-certificates parallel vim tmux sudo
+apt-get install -y --no-install-recommends curl wget git aria2 ca-certificates parallel vim tmux sudo
 
 # Create comfyui-user
 useradd -m -N -G adm -s /bin/bash comfyui-user
@@ -125,10 +125,10 @@ _EOL_
 
 # Install AMD GPU Driver for WSL
 cd ~
-curl -o amdgpu-install.deb https://repo.radeon.com/amdgpu-install/6.4.2.1/ubuntu/noble/amdgpu-install_6.4.60402-1_all.deb
+curl -o amdgpu-install.deb https://repo.radeon.com/amdgpu-install/6.4.4/ubuntu/noble/amdgpu-install_6.4.60404-1_all.deb
 apt-get install -y ./amdgpu-install.deb
-
-# Install AMD GPU Driver with ROCm support
+apt-get update
+amdgpu-install --list-usecase
 amdgpu-install -y --usecase=wsl,rocm --no-dkms
 
 # Add comfyui-user to render and video groups
@@ -152,6 +152,7 @@ $bashScript = @'
 #!/bin/bash
 
 cat << '_EOL_' >> ~/.profile
+export WORKSPACE=/workspace
 export WORKSPACE_PATH=/workspace
 export UV_PYTHON_INSTALL_DIR=/workspace/python
 export VENV_PATH=/workspace/python-venv
