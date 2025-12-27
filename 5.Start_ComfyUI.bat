@@ -1,3 +1,4 @@
+wsl.exe -d Ubuntu24.04-ComfyUI -- bash -lc "tmux has-session -t comfyui 2>/dev/null && tmux kill-session -t comfyui"
 wsl.exe -d Ubuntu24.04-ComfyUI -- bash -lc "tmux new -d -s comfyui '/workspace/comfyui/start_comfyui.sh'"
 wsl.exe -d Ubuntu24.04-ComfyUI -- tmux ls
 
