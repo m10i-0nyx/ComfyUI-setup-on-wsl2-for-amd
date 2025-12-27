@@ -116,6 +116,13 @@ generateResolvConf = true
 default = comfyui-user
 _EOL_
 
+cat << '_EOL_' > /etc/tmux.conf
+## Keybind
+unbind-key C-b
+set-option -g prefix C-z
+bind-key C-z send-prefix
+_EOL_
+
 # Install AMD GPU Driver for WSL
 cd ~
 curl -o amdgpu-install.deb https://repo.radeon.com/amdgpu-install/6.4.2.1/ubuntu/noble/amdgpu-install_6.4.60402-1_all.deb
@@ -127,14 +134,10 @@ amdgpu-install -y --usecase=wsl,rocm --no-dkms
 # Add comfyui-user to render and video groups
 usermod -aG render,video comfyui-user
 
-cat << '_EOL_' > /etc/tmux.conf
-## Keybind
-unbind-key C-b
-set-option -g prefix C-z
-bind-key C-z send-prefix
+# Configure AMD GPU options
+cat << '_EOL_' > /etc/modprobe.d/amdgpu.conf
+options amdgpu
 _EOL_
-
-rocminfo
 
 exit
 
