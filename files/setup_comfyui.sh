@@ -11,23 +11,20 @@ uv venv -p 3.12 ${VENV_PATH}
 . ${VENV_PATH}/bin/activate
 
 # PyTorch(ROCm版)をインストール
-#uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.4
+wget https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/torch-2.9.1%2Brocm7.2.0.lw.git7e1940d4-cp312-cp312-linux_x86_64.whl
+wget https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/torchvision-0.24.0%2Brocm7.2.0.gitb919bd0c-cp312-cp312-linux_x86_64.whl
+wget https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/triton-3.5.1%2Brocm7.2.0.gita272dfa8-cp312-cp312-linux_x86_64.whl
+wget https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/torchaudio-2.9.0%2Brocm7.2.0.gite3c6ee2b-cp312-cp312-linux_x86_64.whl
+uv pip3 uninstall torch torchvision triton torchaudio
+uv pip3 install --break-system-packages torch-2.9.1+rocm7.2.0.lw.git7e1940d4-cp312-cp312-linux_x86_64.whl torchvision-0.24.0+rocm7.2.0.gitb919bd0c-cp312-cp312-linux_x86_64.whl torchaudio-2.9.0+rocm7.2.0.gite3c6ee2b-cp312-cp312-linux_x86_64.whl triton-3.5.1+rocm7.2.0.gita272dfa8-cp312-cp312-linux_x86_64.whl
 
-# PyTorch(ROCm版)をインストール (2025/12/27: AMD公式の ROCm 6.4.4 + PyTorch 2.8.0 + Python 3.12 を直接ダウンロードしてインストール)
-cd ~
-wget https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.4/pytorch_triton_rocm-3.4.0%2Brocm6.4.4.gitf9e5bf54-cp312-cp312-linux_x86_64.whl
-wget https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.4/torch-2.8.0%2Brocm6.4.4.gitc1404424-cp312-cp312-linux_x86_64.whl
-wget https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.4/torchvision-0.23.0%2Brocm6.4.4.git824e8c87-cp312-cp312-linux_x86_64.whl
-wget https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.4/torchaudio-2.8.0%2Brocm6.4.4.git6e1c7fe9-cp312-cp312-linux_x86_64.whl
-uv pip install *.whl
-rm -f *.whl
-
-# Workaround(2025/12/27): libhsa-runtime64.so 関連のエラーを回避
-python3 -c "import torch; print('Workaround Before:', 'torch.cuda.is_available() = ', torch.cuda.is_available())"
 TORCH_LOCATION=$(uv pip show torch | grep Location | awk -F ": " '{print $2}')
-cd ${TORCH_LOCATION}/torch/lib/
+pushd ${TORCH_LOCATION}/torch/lib/
 rm -f libhsa-runtime64.so*
-python3 -c "import torch; print('Workaround After:', 'torch.cuda.is_available() = ', torch.cuda.is_available())"
+popd
+
+# ディレクトリを作成
+mkdir -p ${WORKSPACE}/data/models/{checkpoints,clip_vision,configs,controlnet,diffusion_models,unet,hypernetworks,loras,text_encoders,upscale_models,vae,audio_encoders,model_patches,latent_upscale_models}
 
 # ComfyUI をクローン,　依存関係をインストール
 rm -rf ${COMFYUI_PATH} > /dev/null 2>&1
@@ -36,19 +33,10 @@ cd ${COMFYUI_PATH}
 export COMFYUI_TAG=$(git describe --tags --abbrev=0) # 最新のタグを取得
 git checkout tags/${COMFYUI_TAG}
 uv pip install -r requirements.txt
+uv pip install -r manager_requirements.txt
 
-# ComfyUI-Manager をクローン,　依存関係をインストール
-cd ${COMFYUI_PATH}/custom_nodes
-git clone -b main --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git comfyui-manager
-cd comfyui-manager
-uv pip install -r requirements.txt
-
-# Crystools ノードをインストール
-# AMD ROCm 環境では動作しないためコメントアウト
-#cd ${COMFYUI_PATH}/custom_nodes
-#git clone https://github.com/crystian/comfyui-crystools.git comfyui-crystools
-#cd comfyui-crystools
-#uv pip install -r requirements.txt
+# matrix-nio をインストール(ComfyUI-Manager 用)
+uv pip install matrix-nio
 
 cat << _EOL_ > ${WORKSPACE_PATH}/comfyui/extra_model_paths.yaml
 comfyui:
@@ -92,7 +80,11 @@ python -c "import torch; print('torch=', torch.__version__); print('avail=', tor
 echo "==================================="
 
 cd ${COMFYUI_PATH}
+<<<<<<< Updated upstream
 export CLI_ARGS="--dont-print-server --force-fp16 "
+=======
+export CLI_ARGS="--dont-print-server --enable-manager"
+>>>>>>> Stashed changes
 python3 -u main.py --listen --port 8188 ${CLI_ARGS}
 _EOL_
 

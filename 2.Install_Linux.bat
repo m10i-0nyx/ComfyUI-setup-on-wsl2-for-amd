@@ -125,7 +125,7 @@ _EOL_
 
 # Install AMD GPU Driver for WSL
 cd ~
-curl -o amdgpu-install.deb https://repo.radeon.com/amdgpu-install/6.4.4/ubuntu/noble/amdgpu-install_6.4.60404-1_all.deb
+curl -o amdgpu-install.deb https://repo.radeon.com/amdgpu-install/7.2/ubuntu/noble/amdgpu-install_7.2.70200-1_all.deb
 apt-get install -y ./amdgpu-install.deb
 apt-get update
 amdgpu-install --list-usecase
