@@ -11,20 +11,19 @@ uv venv -p 3.12 ${VENV_PATH}
 . ${VENV_PATH}/bin/activate
 
 # PyTorch(ROCm版)をインストール
+pushd ${WORKSPACE}
 wget https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/torch-2.9.1%2Brocm7.2.0.lw.git7e1940d4-cp312-cp312-linux_x86_64.whl
 wget https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/torchvision-0.24.0%2Brocm7.2.0.gitb919bd0c-cp312-cp312-linux_x86_64.whl
 wget https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/triton-3.5.1%2Brocm7.2.0.gita272dfa8-cp312-cp312-linux_x86_64.whl
 wget https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/torchaudio-2.9.0%2Brocm7.2.0.gite3c6ee2b-cp312-cp312-linux_x86_64.whl
-uv pip3 uninstall torch torchvision triton torchaudio
-uv pip3 install --break-system-packages torch-2.9.1+rocm7.2.0.lw.git7e1940d4-cp312-cp312-linux_x86_64.whl torchvision-0.24.0+rocm7.2.0.gitb919bd0c-cp312-cp312-linux_x86_64.whl torchaudio-2.9.0+rocm7.2.0.gite3c6ee2b-cp312-cp312-linux_x86_64.whl triton-3.5.1+rocm7.2.0.gita272dfa8-cp312-cp312-linux_x86_64.whl
+uv pip uninstall torch torchvision triton torchaudio
+uv pip install --break-system-packages torch-2.9.1+rocm7.2.0.lw.git7e1940d4-cp312-cp312-linux_x86_64.whl torchvision-0.24.0+rocm7.2.0.gitb919bd0c-cp312-cp312-linux_x86_64.whl torchaudio-2.9.0+rocm7.2.0.gite3c6ee2b-cp312-cp312-linux_x86_64.whl triton-3.5.1+rocm7.2.0.gita272dfa8-cp312-cp312-linux_x86_64.whl
+popd
 
 TORCH_LOCATION=$(uv pip show torch | grep Location | awk -F ": " '{print $2}')
 pushd ${TORCH_LOCATION}/torch/lib/
 rm -f libhsa-runtime64.so*
 popd
-
-# ディレクトリを作成
-mkdir -p ${WORKSPACE}/data/models/{checkpoints,clip_vision,configs,controlnet,diffusion_models,unet,hypernetworks,loras,text_encoders,upscale_models,vae,audio_encoders,model_patches,latent_upscale_models}
 
 # ComfyUI をクローン,　依存関係をインストール
 rm -rf ${COMFYUI_PATH} > /dev/null 2>&1
@@ -67,7 +66,7 @@ source ${HOME}/.profile
 source ${VENV_PATH}/bin/activate
 
 # Make sure model directories exist
-mkdir -p ${WORKSPACE_PATH}/data/models/{checkpoints,clip_vision,configs,controlnet,diffusion_models,unet,hypernetworks,loras,text_encoders,upscale_models,vae,audio_encoders,model_patches}
+mkdir -p ${WORKSPACE}/data/models/{checkpoints,clip_vision,configs,controlnet,diffusion_models,unet,hypernetworks,loras,text_encoders,upscale_models,vae,audio_encoders,model_patches,latent_upscale_models}
 
 echo "===== AMD ROCm info ====="
 rocminfo
@@ -80,11 +79,7 @@ python -c "import torch; print('torch=', torch.__version__); print('avail=', tor
 echo "==================================="
 
 cd ${COMFYUI_PATH}
-<<<<<<< Updated upstream
-export CLI_ARGS="--dont-print-server --force-fp16 "
-=======
 export CLI_ARGS="--dont-print-server --enable-manager"
->>>>>>> Stashed changes
 python3 -u main.py --listen --port 8188 ${CLI_ARGS}
 _EOL_
 
